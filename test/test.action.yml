@@ -1,0 +1,24 @@
+name: Test action.yml
+description: Not a real action!
+inputs:
+  foo:
+    required: true
+    description: This is the foo input.
+    default: foo-default
+  bar:
+    required: false
+    description: This is the bar input.
+  kebab-input:
+    required: false
+    description: Kebabs are delicious, but personally I prefer snakes.
+    default: Lamb
+  snake_input:
+    required: false
+    description: Snakes are less delicious, but easier to read.
+    default: Anaconda
+outputs:
+  result:
+    description: The result output.
+runs:
+  using: node12
+  main: none

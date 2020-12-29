@@ -1,0 +1,110 @@
+
+name: CI
+on:
+  push:
+  pull_request:
+  release:
+
+jobs:
+  detect-tag:
+    name: Detect tag
+    runs-on: ubuntu-20.04
+    outputs:
+      tag: ${{ steps.detect-tag.outputs.tag }}
+
+    steps:
+      - name: Detect tag
+        id: detect-tag
+        run: |
+          TAG=$(git name-rev --name-only --tags HEAD)
+          echo "::set-output name=tag::$TAG"
+
+  compile:
+    name: Compile
+    runs-on: ubuntu-20.04
+
+    steps:
+      - run: npm run lint
+      - run: npm run compile
+      - run: npm run bundle
+
+  test:
+    name: Test
+    needs: compile
+    runs-on: ubuntu-20.04
+    env:
+      TEST_FILE: test/generated/inputs-outputs.ts
+
+    steps:
+      - name: Prepare
+        run: rm -v ${{ env.TEST_FILE }}
+
+      - name: Test as library
+        run: npm run test
+
+      - name: Sniff test enum file
+        shell: bash
+        run: |
+          [[ -f ${{ env.TEST_FILE }} ]]
+          grep "export enum Inputs" ${{ env.TEST_FILE }}
+          grep "export enum Outputs" ${{ env.TEST_FILE }}
+          LINES=$(wc -l ${{ env.TEST_FILE }} | awk '{ print $1 }')
+          (( LINES > 30 ))
+
+      - name: Clean up
+        run: rm -v ${{ env.TEST_FILE }}
+
+      - name: Test as CLI
+        run: npm run test-cli
+
+      - name: Sniff test new enum file
+        run: |
+          [[ -f ${{ env.TEST_FILE }} ]]
+          grep "export enum Inputs" ${{ env.TEST_FILE }}
+          grep "export enum Outputs" ${{ env.TEST_FILE }}
+          LINES=$(wc -l ${{ env.TEST_FILE }} | awk '{ print $1 }')
+          (( LINES > 30 ))
+
+      - name: Clean up again
+        run: rm -v ${{ env.TEST_FILE }}
+
+  package:
+    name: Package
+    needs: [ compile, test, detect-tag ]
+    runs-on: ubuntu-20.04
+    if: needs.detect-tag.outputs.tag != 'undefined'
+
+    steps:
+      - name: Prune
+        run: npm prune --production
+
+      - name: Copy-in package files
+        run: cp -v package*.json README.md dist/
+
+      - name: Create tarball
+        run: |
+          export TAR_NAME=action-io-generator-${{ needs.detect-tag.outputs.tag }}.tar.gz
+          echo "TAR_NAME=$TAR_NAME" >> $GITHUB_ENV
+          tar -zvcf $TAR_NAME dist/
+          du $TAR_NAME
+
+      - name: Upload tarball
+        uses: actions/upload-artifact@v2
+        with:
+            name: ${{ env.TAR_NAME }}
+            if-no-files-found: error
+
+  publish:
+    name: Publish
+    needs: [ package ]
+    runs-on: ubuntu-20.04
+
+    steps:
+      - name: npm login
+        run: |
+          export USERNAME=tetchel
+          export EMAIL=tetchell@redhat.com
+
+          printf "${USERNAME}\n${{ secrets.GITHUB_TOKEN }}\n${EMAIL} | npm login --scope=@${USERNAME}--registry=https://npm.pkg.github.com
+
+      - run: npm publish
