@@ -1,14 +1,13 @@
 {
   "name": "@tetchel/action-io-generator",
+  "version": "0.1.0",
   "description": "Automatically generate enums for your JavaScript action's inputs and outputs",
   "main": "dist/index.js",
   "repository": {
     "type": "git",
     "url": "git://github.com/tetchel/action-io-generator.git"
   },
-  "engines": {
-    "node": "12"
-  },
+  "bin": "bin.js",
   "author": "tetchell@redhat.com",
   "license": "MIT",
   "bugs": {
@@ -21,7 +20,8 @@
     "clean": "rm -rf out/ dist/",
     "lint": "eslint . --max-warnings=0",
     "test": "ts-node test/test.ts",
-    "test-cli": "node dist/index.js -a test/test.action.yml -o test/generated/inputs-outputs.ts"
+    "test-cli": "node ./dist/index.js -a test/test.action.yml -o test/generated/inputs-outputs.ts",
+    "prepackage": "npm run compile && npm run bundle && npm prune --production && cp -v package*.json README.md LICENSE bin.js dist/"
   },
   "devDependencies": {
     "@types/js-yaml": "^3.12.5",

@@ -13,30 +13,33 @@ jobs:
       tag: ${{ steps.detect-tag.outputs.tag }}
 
     steps:
+      - uses: actions/checkout@v2
+
       - name: Detect tag
         id: detect-tag
         run: |
           TAG=$(git name-rev --name-only --tags HEAD)
+          echo "Tag is '$TAG'"
+          echo "Event name is ${{ github.event_name }}"
           echo "::set-output name=tag::$TAG"
 
-  compile:
-    name: Compile
-    runs-on: ubuntu-20.04
-
-    steps:
-      - run: npm run lint
-      - run: npm run compile
-      - run: npm run bundle
-
-  test:
-    name: Test
-    needs: compile
+  compile-test:
+    name: Compile and test
     runs-on: ubuntu-20.04
     env:
       TEST_FILE: test/generated/inputs-outputs.ts
 
     steps:
-      - name: Prepare
+      - uses: actions/checkout@v2
+
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run compile
+      - run: npm run bundle
+
+      ##### End compile steps
+
+      - name: Prepare to test
         run: rm -v ${{ env.TEST_FILE }}
 
       - name: Test as library
@@ -45,6 +48,7 @@ jobs:
       - name: Sniff test enum file
         shell: bash
         run: |
+          set -x
           [[ -f ${{ env.TEST_FILE }} ]]
           grep "export enum Inputs" ${{ env.TEST_FILE }}
           grep "export enum Outputs" ${{ env.TEST_FILE }}
@@ -58,7 +62,9 @@ jobs:
         run: npm run test-cli
 
       - name: Sniff test new enum file
+        shell: bash
         run: |
+          set -x
           [[ -f ${{ env.TEST_FILE }} ]]
           grep "export enum Inputs" ${{ env.TEST_FILE }}
           grep "export enum Outputs" ${{ env.TEST_FILE }}
@@ -68,43 +74,35 @@ jobs:
       - name: Clean up again
         run: rm -v ${{ env.TEST_FILE }}
 
+      ##### End test steps
+
   package:
     name: Package
-    needs: [ compile, test, detect-tag ]
+    needs: [ compile-test, detect-tag ]
     runs-on: ubuntu-20.04
-    if: needs.detect-tag.outputs.tag != 'undefined'
+    if: needs.detect-tag.outputs.tag != 'undefined' && needs.detect-tag.outputs.tag != ''
+    outputs:
+      TAR_NAME: ${{ steps.tar.outputs.tar_name }}
 
     steps:
-      - name: Prune
-        run: npm prune --production
-
-      - name: Copy-in package files
-        run: cp -v package*.json README.md dist/
+      - uses: actions/checkout@v2
+      - run: npm ci
+      - run: npm run prepackage
 
       - name: Create tarball
+        id: tar
+        working-directory: dist
         run: |
           export TAR_NAME=action-io-generator-${{ needs.detect-tag.outputs.tag }}.tar.gz
           echo "TAR_NAME=$TAR_NAME" >> $GITHUB_ENV
-          tar -zvcf $TAR_NAME dist/
+          tar -zvcf $TAR_NAME *
           du $TAR_NAME
+          echo "::set-output name=tar_name::$TAR_NAME"
+          mv $TAR_NAME ..
 
-      - name: Upload tarball
+      - name: Upload tarball artifact
         uses: actions/upload-artifact@v2
         with:
+            path: ${{ env.TAR_NAME }}
             name: ${{ env.TAR_NAME }}
             if-no-files-found: error
-
-  publish:
-    name: Publish
-    needs: [ package ]
-    runs-on: ubuntu-20.04
-
-    steps:
-      - name: npm login
-        run: |
-          export USERNAME=tetchel
-          export EMAIL=tetchell@redhat.com
-
-          printf "${USERNAME}\n${{ secrets.GITHUB_TOKEN }}\n${EMAIL} | npm login --scope=@${USERNAME}--registry=https://npm.pkg.github.com
-
-      - run: npm publish

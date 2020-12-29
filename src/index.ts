@@ -21,7 +21,7 @@ export async function generate(actionYmlFile: string, outFile: string): Promise<
     return outFile;
 }
 
-async function main(): Promise<void> {
+export async function cli(): Promise<void> {
     const minimistOptions: minimist.Opts = {
         alias: {
             a: "actionYml",
@@ -51,7 +51,7 @@ async function main(): Promise<void> {
 }
 
 if (require.main === module) {
-    main()
+    cli()
     .then(() => {
         logger.log(`Success.`);
     })
