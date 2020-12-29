@@ -3,7 +3,6 @@ name: CI
 on:
   push:
   pull_request:
-  release:
 
 jobs:
   detect-tag:
@@ -20,7 +19,7 @@ jobs:
         run: |
           TAG=$(git name-rev --name-only --tags HEAD)
           echo "Tag is '$TAG'"
-          echo "Event name is ${{ github.event_name }}"
+          echo "Event name is '${{ github.event_name }}'"
           echo "::set-output name=tag::$TAG"
 
   compile-test:
@@ -80,9 +79,9 @@ jobs:
     name: Package
     needs: [ compile-test, detect-tag ]
     runs-on: ubuntu-20.04
-    if: needs.detect-tag.outputs.tag != 'undefined' && needs.detect-tag.outputs.tag != ''
+    if: needs.detect-tag.outputs.tag != 'undefined'
     outputs:
-      TAR_NAME: ${{ steps.tar.outputs.tar_name }}
+      TAR_NAME: ${{ steps.tar.outputs.TAR_NAME }}
 
     steps:
       - uses: actions/checkout@v2
@@ -97,12 +96,52 @@ jobs:
           echo "TAR_NAME=$TAR_NAME" >> $GITHUB_ENV
           tar -zvcf $TAR_NAME *
           du $TAR_NAME
-          echo "::set-output name=tar_name::$TAR_NAME"
+          echo "::set-output name=TAR_NAME::$TAR_NAME"
           mv $TAR_NAME ..
 
-      - name: Upload tarball artifact
+      - name: Upload tarball
         uses: actions/upload-artifact@v2
         with:
             path: ${{ env.TAR_NAME }}
             name: ${{ env.TAR_NAME }}
             if-no-files-found: error
+
+  release:
+    name: Release
+    needs: [ package ]
+    runs-on: ubuntu-20.04
+    if: needs.detect-tag.outputs.tag != 'undefined'
+    env:
+      TAR_NAME: ${{ needs.package.outputs.TAR_NAME }}
+
+    steps:
+      - name: Download tarball
+        uses: actions/download-artifact@v2
+        with:
+          name: ${{ env.TAR_NAME }}
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          prerelease: false
+
+      - name: Echo release URL
+        run: |
+          echo "================ View your release at: ================="
+          echo "===== ${{ steps.create_release.outputs.html_url }} ====="
+          echo "========================================================"
+
+      # https://github.com/actions/upload-release-asset
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ${{ env.TAR_NAME }}
+          asset_name: ${{ env.TAR_NAME }}
+          asset_content_type: application/gzip
