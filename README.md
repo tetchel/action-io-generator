@@ -23,8 +23,8 @@ Found 8 inputs and 0 outputs.
 Outputting input and output enums to src/generated/inputs-outputs.ts
 ```
 
-### Example
-See [test](./test) for an example.
+## Example
+See [test](./test) for an example. [generated/inputs-outputs.ts](./test/generated/inputs-outputs.ts) is generated from [test.action.yml](/test/test.action.yml).
 
 ```yaml
 inputs:
@@ -46,3 +46,13 @@ export enum Inputs {
     FOO = "foo",
 }
 ```
+
+## Options
+The only required option is `-o / --outFile`.
+
+| Short | Long | Default | Description |
+| ----  | ---- | ------- | ----------- |
+| `-o`  | `--outFile` | **None** | JS/TS file to write out enums to. |
+| `-a`  | `--actionYml` | `./action.yml` | Path to `action.yml` to process into enums. |
+| `-s`  | `--silent` | `false` | Produce no output, except errors to stderr. |
+| `-w`  | `--watch` | `false` | Keep running, re-running the generator each time the `actionYml` is edited. |

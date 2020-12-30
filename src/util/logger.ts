@@ -8,7 +8,7 @@ export function setSilent(silent: boolean): void {
 export function log(s: string, ...args: unknown[]): void {
     if (!isSilent) {
         if (args.length > 0) {
-            console.log(s, args);
+            console.log(s, ...args);
         }
         else {
             console.log(s);
