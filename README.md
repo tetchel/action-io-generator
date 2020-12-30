@@ -12,7 +12,7 @@ By using this tool, you can reduce duplication and the errors that come with it 
 ## Install
 
 ```bash
-$ npm i -D https://github.com/tetchel/action-io-generator/releases/download/v0.1.0/action-io-generator-v0.1.0.tar.gz
+$ npm i -D https://github.com/tetchel/action-io-generator/releases/download/v0.2.0/action-io-generator-v0.2.0.tar.gz
 ```
 
 ## Usage
@@ -48,11 +48,11 @@ export enum Inputs {
 ```
 
 ## Options
-The only required option is `-o / --outFile`.
+The only required option is `-o / --outFile`. For example, `npx action-io-generator -o generated/inputs-outputs.ts`.
 
 | Short | Long | Default | Description |
 | ----  | ---- | ------- | ----------- |
-| `-o`  | `--outFile` | **None** | JS/TS file to write out enums to. |
+| `-o`  | `--outFile` | **None** | JS/TS file to write out enums to. The directory must exist. If the file exists, it is overwritten. |
 | `-a`  | `--actionYml` | `./action.yml` | Path to `action.yml` to process into enums. |
 | `-s`  | `--silent` | `false` | Produce no output, except errors to stderr. |
-| `-w`  | `--watch` | `false` | Keep running, re-running the generator each time the `actionYml` is edited. |
+| `-w`  | `--watch` | `false` | Keep running after generating once, and re-run the generator each time the `actionYml` is edited. |
