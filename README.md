@@ -8,7 +8,7 @@ By using this tool, you can reduce duplication and the errors that come with it 
 
 ```sh
 $ npm i -D https://github.com/tetchel/action-io-generator/releases/download/v0.1.0/action-io-generator-v0.1.0.tar.gz
-$ npx run action-io-generator --actionYml ./action.yml --outFile ./src/generated/inputs-outputs.ts
+$ npx action-io-generator --actionYml ./action.yml --outFile ./src/generated/inputs-outputs.ts
 Loading action file from ./action.yml
 Writing input and output enums to src/generated/inputs-outputs.ts
 Found 8 inputs and 0 outputs.
