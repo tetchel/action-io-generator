@@ -34,7 +34,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - run: npm ci
+      - uses: bahmutov/npm-install@v1
       - run: npm run lint
       - run: npm run compile
       - run: npm run bundle
@@ -87,7 +87,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-      - run: npm ci
+      - uses: bahmutov/npm-install@v1
       - run: npm run prepackage
 
       - name: Rename dist to package name
