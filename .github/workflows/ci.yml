@@ -8,24 +8,32 @@ env:
   PACKAGE_NAME: action-io-generator
 
 jobs:
-  detect-tag:
+  detect_tag:
     name: Detect tag
     runs-on: ubuntu-20.04
     outputs:
-      tag: ${{ steps.detect-tag.outputs.tag }}
+      tag: ${{ steps.detect_tag.outputs.tag }}
+      short_sha: ${{ steps.get_short_sha.outputs.short_sha }}
 
     steps:
       - uses: actions/checkout@v2
 
       - name: Detect tag
-        id: detect-tag
+        id: detect_tag
         run: |
           TAG=$(git name-rev --name-only --tags HEAD)
           echo "Tag is '$TAG'"
           echo "Event name is '${{ github.event_name }}'"
           echo "::set-output name=tag::$TAG"
 
-  compile-test:
+      - name: Get commit short sha
+        id: get_short_sha
+        run: |
+          SHORT_SHA="${GITHUB_SHA::7}"
+          echo "Short SHA is $SHORT_SHA"
+          echo "::set-output name=short_sha::$SHORT_SHA"
+
+  compile_test:
     name: Compile and test
     runs-on: ubuntu-20.04
     env:
@@ -80,7 +88,7 @@ jobs:
 
   package:
     name: Package
-    needs: [ compile-test, detect-tag ]
+    needs: [ compile_test, detect_tag ]
     runs-on: ubuntu-20.04
     outputs:
       TAR_NAME: ${{ steps.tar.outputs.TAR_NAME }}
@@ -95,8 +103,14 @@ jobs:
 
       - name: Create tarball
         id: tar
+        shell: bash
         run: |
-          export TAR_NAME=${{ env.PACKAGE_NAME }}-${{ needs.detect-tag.outputs.tag }}.tar.gz
+          # The tar is versioned with the tag if it exists, else it's the short sha
+          export TAG=${{ needs.detect_tag.outputs.tag }}
+          export SHORT_SHA=${{ needs.detect_tag.outputs.short_sha }}
+          TAR_VERSION=${TAG/undefined/$SHORT_SHA}
+
+          export TAR_NAME=${{ env.PACKAGE_NAME }}-${TAR_VERSION}.tar.gz
           echo "TAR_NAME=$TAR_NAME" >> $GITHUB_ENV
 
           tar -zvcf $TAR_NAME ${{ env.PACKAGE_NAME }}
@@ -114,7 +128,7 @@ jobs:
     name: Release
     needs: [ package ]
     runs-on: ubuntu-20.04
-    if: needs.detect-tag.outputs.tag != 'undefined'
+    if: needs.detect_tag.outputs.tag != 'undefined'
     env:
       TAR_NAME: ${{ needs.package.outputs.TAR_NAME }}
 
