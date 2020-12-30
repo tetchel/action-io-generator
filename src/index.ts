@@ -45,7 +45,6 @@ export async function cli(): Promise<void> {
     if (!outFile) {
         outFile = path.resolve(process.cwd(), "inputs-outputs.ts");
     }
-    logger.log(`Writing input and output enums to ${outFile}`);
 
     await generate(actionYmlFile, outFile);
 }
