@@ -16,7 +16,7 @@ export async function cli(): Promise<void> {
             o: "outFile",
             w: "watch",
         },
-        boolean: [ "silent", "watch" ]
+        boolean: [ "silent", "watch" ],
     };
 
     const args = minimist(process.argv.slice(2), minimistOptions);
@@ -46,10 +46,10 @@ export async function cli(): Promise<void> {
 
 if (require.main === module) {
     cli()
-    .catch((err) => {
-        console.error(err);
-        process.exit(1);
-    });
+        .catch((err) => {
+            console.error(err);
+            process.exit(1);
+        });
 }
 else {
     logger.setSilent(true);

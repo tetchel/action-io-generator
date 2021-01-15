@@ -1,4 +1,3 @@
-
 let isSilent = false;
 
 export function setSilent(silent: boolean): void {
