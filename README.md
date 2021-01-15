@@ -12,7 +12,7 @@ By using this tool, you can reduce duplication and the errors that come with it 
 ## Install
 
 ```bash
-$ npm i -D https://github.com/tetchel/action-io-generator/releases/download/v0.2.0/action-io-generator-v0.2.0.tar.gz
+$ npm i -D https://github.com/tetchel/action-io-generator/releases/download/v0.3.0/action-io-generator-v0.3.0.tar.gz
 ```
 
 ## Usage
