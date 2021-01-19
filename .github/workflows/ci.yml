@@ -12,26 +12,13 @@ jobs:
     name: Detect tag
     runs-on: ubuntu-20.04
     outputs:
-      tag: ${{ steps.detect_tag.outputs.tag }}
-      short_sha: ${{ steps.get_short_sha.outputs.short_sha }}
+      tag: ${{ steps.commit_data.outputs.tag }}
+      short_sha: ${{ steps.commit_data.outputs.short_sha }}
 
     steps:
       - uses: actions/checkout@v2
-
-      - name: Detect tag
-        id: detect_tag
-        run: |
-          TAG=$(git name-rev --name-only --tags HEAD)
-          echo "Tag is '$TAG'"
-          echo "Event name is '${{ github.event_name }}'"
-          echo "::set-output name=tag::$TAG"
-
-      - name: Get commit short sha
-        id: get_short_sha
-        run: |
-          SHORT_SHA="${GITHUB_SHA::7}"
-          echo "Short SHA is $SHORT_SHA"
-          echo "::set-output name=short_sha::$SHORT_SHA"
+      - uses: tetchel/commit-data@v1
+        id: commit_data
 
   compile_test:
     name: Compile and test
@@ -85,83 +72,3 @@ jobs:
         run: rm -v ${{ env.TEST_FILE }}
 
       ##### End test steps
-
-  package:
-    name: Package
-    needs: [ compile_test, detect_tag ]
-    runs-on: ubuntu-20.04
-    outputs:
-      TAR_NAME: ${{ steps.tar.outputs.TAR_NAME }}
-
-    steps:
-      - uses: actions/checkout@v2
-      - uses: bahmutov/npm-install@v1
-      - run: npm run prepackage
-
-      - name: Rename dist to package name
-        run: mv dist/ ${{ env.PACKAGE_NAME }}
-
-      - name: Create tarball
-        id: tar
-        shell: bash
-        run: |
-          # The tar is versioned with the tag if it exists, else it's the short sha
-          export TAG=${{ needs.detect_tag.outputs.tag }}
-          export SHORT_SHA=${{ needs.detect_tag.outputs.short_sha }}
-          TAR_VERSION=${TAG/undefined/$SHORT_SHA}
-
-          export TAR_NAME=${{ env.PACKAGE_NAME }}-${TAR_VERSION}.tar.gz
-          echo "TAR_NAME=$TAR_NAME" >> $GITHUB_ENV
-
-          tar -zvcf $TAR_NAME ${{ env.PACKAGE_NAME }}
-          du -h $TAR_NAME
-          echo "::set-output name=TAR_NAME::$TAR_NAME"
-
-      - name: Upload tarball
-        uses: actions/upload-artifact@v2
-        with:
-            path: ${{ env.TAR_NAME }}
-            name: ${{ env.TAR_NAME }}
-            if-no-files-found: error
-
-  release:
-    name: Release
-    needs: [ package ]
-    runs-on: ubuntu-20.04
-    if: needs.detect_tag.outputs.tag != 'undefined'
-    env:
-      TAR_NAME: ${{ needs.package.outputs.TAR_NAME }}
-
-    steps:
-      - name: Download tarball
-        uses: actions/download-artifact@v2
-        with:
-          name: ${{ env.TAR_NAME }}
-
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ github.ref }}
-
-      # https://github.com/actions/upload-release-asset
-      - name: Upload Release Asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ${{ env.TAR_NAME }}
-          asset_name: ${{ env.TAR_NAME }}
-          asset_content_type: application/gzip
-
-      - name: Echo release URL
-        run: |
-          export RELEASE_URL=${{ steps.create_release.outputs.html_url }}
-          echo "===================== View your release at: ======================"
-          echo "===> $RELEASE_URL"
-          echo "===================== Download the tarball at: ==================="
-          echo "===> ${RELEASE_URL/tag/download}/${{ env.TAR_NAME }}"
-          echo "=================================================================="

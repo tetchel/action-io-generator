@@ -1,6 +1,6 @@
 {
   "name": "@redhat-actions/action-io-generator",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Automatically generate enums for your JavaScript action's inputs and outputs",
   "main": "dist/index.js",
   "repository": {
@@ -16,12 +16,14 @@
   "homepage": "https://github.com/tetchel/action-io-generator#readme",
   "scripts": {
     "compile": "tsc -p .",
-    "bundle": "ncc build src/index.ts --source-map --minify",
+    "bundle": "ncc build src/index.ts --minify",
     "clean": "rm -rf out/ dist/",
     "lint": "eslint . --max-warnings=0",
     "test": "ts-node test/test.ts",
     "test-cli": "node ./dist/index.js -a test/test.action.yml -o test/generated/inputs-outputs.ts",
-    "prepackage": "npm run clean && npm run compile && npm run bundle && npm prune --production && rm -rv dist/generator/ dist/util/ && cp -v package*.json README.md LICENSE bin.js dist/"
+    "package": "npm run clean && npm run compile && npm run bundle && rm -rv dist/generator/ dist/util/ && cp -v package*.json README.md LICENSE bin.js dist/",
+    "publish-dry": "npm run package && npm publish dist/ --access=public --dry-run",
+    "do-publish": "npm run package && npm publish dist/ --access=public"
   },
   "devDependencies": {
     "@redhat-actions/eslint-config": "^1.2.3",
