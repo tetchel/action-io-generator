@@ -2,6 +2,7 @@
 
 [![CI](https://github.com/tetchel/action-io-generator/workflows/CI/badge.svg)](https://github.com/tetchel/action-io-generator/actions?query=workflow%3ACI)
 
+[![npm badge](https://img.shields.io/npm/v/@redhat-actions/action-io-generator)](https://www.npmjs.com/package/@redhat-actions/action-io-generator)
 [![tag badge](https://img.shields.io/github/v/tag/tetchel/action-io-generator)](https://github.com/tetchel/action-io-generator/tags)
 [![license badge](https://img.shields.io/github/license/tetchel/action-io-generator)](./LICENSE)
 
@@ -12,7 +13,7 @@ By using this tool, you can reduce duplication and the errors that come with it 
 ## Install
 
 ```bash
-$ npm i -D https://github.com/tetchel/action-io-generator/releases/download/v0.3.0/action-io-generator-v0.3.0.tar.gz
+$ npm i -D @redhat-actions/action-io-generator
 ```
 
 ## Usage
