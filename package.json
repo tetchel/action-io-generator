@@ -1,6 +1,6 @@
 {
-  "name": "action-io-generator",
-  "version": "0.3.0",
+  "name": "@redhat-actions/action-io-generator",
+  "version": "0.4.0",
   "description": "Automatically generate enums for your JavaScript action's inputs and outputs",
   "main": "dist/index.js",
   "repository": {
@@ -24,7 +24,8 @@
     "prepackage": "npm run clean && npm run compile && npm run bundle && npm prune --production && rm -rv dist/generator/ dist/util/ && cp -v package*.json README.md LICENSE bin.js dist/"
   },
   "devDependencies": {
-    "@redhat-actions/eslint-config": "^1.0.2",
+    "@redhat-actions/eslint-config": "^1.2.3",
+    "@redhat-actions/tsconfig": "^1.1.0",
     "@types/js-yaml": "^3.12.5",
     "@types/minimist": "^1.2.1",
     "@types/node": "12",

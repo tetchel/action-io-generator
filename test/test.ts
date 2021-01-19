@@ -2,7 +2,7 @@ import * as path from "path";
 
 import { generate } from "../dist";
 
-(async function test() {
+(async function test(): Promise<void> {
     const TEST_FILE = path.join(__dirname, "test.action.yml");
     const TEST_OUTPUT = path.join(__dirname, "generated", "inputs-outputs.ts");
 

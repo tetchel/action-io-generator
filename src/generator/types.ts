@@ -13,8 +13,8 @@ export type InputOutputEntries = [string, InputOrOutput][];
 export type ActionYml = Readonly<{
     name: string;
     description: string;
-    inputs: InputsOutputs;
-    outputs: InputsOutputs;
+    inputs?: InputsOutputs;
+    outputs?: InputsOutputs;
     runs: {
         using: string;
         main: string;

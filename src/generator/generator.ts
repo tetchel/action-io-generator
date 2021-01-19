@@ -48,7 +48,10 @@ async function generateInner(actionYmlFile: string, outFile: string): Promise<vo
     const inputs = Object.entries(actionYml.inputs || []);
     const outputs = Object.entries(actionYml.outputs || []);
 
-    logger.log(`Found ${inputs.length} input${inputs.length === 1 ? "" : "s"} and ${outputs.length} output${outputs.length === 1 ? "" : "s"}.`);
+    logger.log(
+        `Found ${inputs.length} input${inputs.length === 1 ? "" : "s"} `
+        + `and ${outputs.length} output${outputs.length === 1 ? "" : "s"}.`,
+    );
 
     await outputEnums(outFile, inputs, outputs);
 }
@@ -83,20 +86,27 @@ async function outputEnums(outFile: string, inputs: InputOutputEntries, outputs:
     logger.log(`Output input and output enums to ${outFile}`);
 }
 
-function enumify(enumName: string, inputsOrOutputs: [string, InputOrOutput][]) {
+function enumify(enumName: string, inputsOrOutputs: [string, InputOrOutput][]): string {
     inputsOrOutputs.sort();
 
     const OUTPUT_INDENT = " ".repeat(4);
+    const LINE_START = `${OUTPUT_INDENT} *`;
 
     return inputsOrOutputs.reduce((accumulator, [ name, props ]) => {
+        const foldedDescription = props.description.trim()
+            .replace(/\r\n/g, `\n`)                     // want windows line endings? too bad
+            .replace(/[\r\n]/g, `\n${LINE_START} `);
+
+        const enumifiedName = name.toUpperCase().replace(/-/g, "_");
+
         // eslint-disable-next-line no-param-reassign,operator-linebreak
         accumulator +=
 `${OUTPUT_INDENT}/**
-${OUTPUT_INDENT} * ${props.description.trim().replace("\\n", " ")}
-${OUTPUT_INDENT} * Required: ${!!props.required}
-${OUTPUT_INDENT} * Default: ${props.default !== undefined ? `"${props.default}"` : "None."}
-${OUTPUT_INDENT} */
-${OUTPUT_INDENT}${name.toUpperCase().replace(/-/g, "_")} = "${name}",
+${LINE_START} ${foldedDescription}
+${LINE_START} Required: ${!!props.required}
+${LINE_START} Default: ${props.default !== undefined ? `"${props.default}"` : "None."}
+${LINE_START}/
+${OUTPUT_INDENT}${enumifiedName} = "${name}",
 `;
         return accumulator;
     }, `export enum ${enumName} {\n`) + `}\n`;

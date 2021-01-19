@@ -3,7 +3,7 @@
 const index = require("./index");
 
 index.cli()
-.catch((err) => {
-    console.error(err);
-    process.exit(1);
-});
+    .catch((err) => {
+        console.error(err);
+        process.exit(1);
+    });
